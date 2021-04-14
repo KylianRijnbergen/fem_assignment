@@ -117,8 +117,10 @@ beta_wallet : array of double; //Wallet-like object;
 current_funds_index: Integer; //Wallet for beta budget
 time_steps : Integer; //Tracks number of steps
 current_time_step : Integer; //Index for time steps;
-trivial_cases : TValueArrayX; //Intermediate column for which the rest of the problem is easily solved.
+trivial_cases : array of TValueArrayX; //Intermediate column for which the rest of the problem is easily solved.
 current_funds : double; //Current funds (budget left).
+current_beta : double; //Intermediate value we use in functions to indicate the current beta.
+cases_no_funds_spent : array of TValueArrayX;
 //OWN VARIABLES
 begin
   //Initialization, check parameters
@@ -160,7 +162,7 @@ begin
     setLength(trivial_cases, time_steps);
     if time_steps = 1 then
     begin
-      trivial_cases := EntropicRiskMeasure(X, beta, p);
+      trivial_cases[time_steps - 1] := EntropicRiskMeasure(X, beta, p);
     end;
 
 
@@ -177,6 +179,23 @@ begin
       end;
     end;
 
+
+
+    //We gaan een stuk code schrijven dat voor de laatste tijdstap,
+    //voor elk mogelijk budget, uitrekent wat er gebeurt als we een bedrag x uitgeven,
+    //waarbij x een bedrag moet zijn wat in onze portemonnee kan zitten.
+    setLength(cases_no_funds_spent, division_factor + 1);
+    for current_funds_index := 0 to division_factor do
+    begin
+      //Compute, for all possible spendings, what the trivial cases would be.
+      current_beta := beta_wallet[current_funds_index];
+      cases_no_funds_spent[current_funds_index] := EntropicRiskMeasure(X, current_beta, p);
+      for current_time_step := 0 to time_steps - 1 do
+      begin
+        BetaStar[current_funds_index][time_steps - 1][current_time_step] := current_funds_index; //
+      end;
+    end;
+    trivial_cases[time_steps - 1] := cases_no_funds_spent[division_factor];
 
 
 
