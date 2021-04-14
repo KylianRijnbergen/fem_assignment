@@ -117,6 +117,13 @@ beta_wallet : array of double; //Wallet-like object;
 index: Integer; //Wallet for beta budget
 time_steps : Integer; //Tracks number of steps
 current_time_step : Integer; //Index for time steps;
+
+
+
+
+
+ValueHere : TValueArrayX;
+
 //OWN VARIABLES
 begin
   //Initialization, check parameters
@@ -150,16 +157,22 @@ begin
 
 
     //Determine how many time steps the model has
-    time_steps := Length(X); //Determine the number of time steps by using the length of column X, which is the column with results.
+    time_steps := Length(X) - 1; //Determine the number of time steps by using the length of column X, which is the column with results.
 
 
     //If the model only has 1 time step, the solution is trivial.
     //The trivial solution is:
-
+    setLength(ValueHere, time_steps);
     if time_steps = 1 then
     begin
-      EntropicRiskMeasure(X, beta, p);
+      ValueHere := EntropicRiskMeasure(X, beta, p);
     end;
+
+
+
+    ShowMessage('K is not larger than zero.');
+
+
 
 end;
 
