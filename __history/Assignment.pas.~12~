@@ -113,17 +113,8 @@ var
 budget : double; //budget is beta
 spending_size : double; //Spending size;
 division_factor : integer; //Division factor
-beta_wallet : array of double; //Wallet-like object;
-index: Integer; //Wallet for beta budget
-time_steps : Integer; //Tracks number of steps
-current_time_step : Integer; //Index for time steps;
-
-
-
-
-
-ValueHere : TValueArrayX;
-
+beta_wallet : array of double;
+  index: Integer; //Wallet for beta budget
 //OWN VARIABLES
 begin
   //Initialization, check parameters
@@ -155,22 +146,6 @@ begin
       beta_wallet[index] := index * spending_size;
     end;
 
-
-    //Determine how many time steps the model has
-    time_steps := Length(X) - 1; //Determine the number of time steps by using the length of column X, which is the column with results.
-
-
-    //If the model only has 1 time step, the solution is trivial.
-    //The trivial solution is:
-    setLength(ValueHere, time_steps);
-    if time_steps = 1 then
-    begin
-      ValueHere := EntropicRiskMeasure(X, beta, p);
-    end;
-
-
-
-    ShowMessage('K is not larger than zero.');
 
 
 

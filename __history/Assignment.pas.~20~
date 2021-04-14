@@ -163,7 +163,7 @@ begin
     //If the model only has 1 time step, the solution is trivial.
     //The trivial solution is:
     setLength(ValueHere, time_steps);
-    if time_steps = 1 then
+    if time_steps = 10 then
     begin
       ValueHere := EntropicRiskMeasure(X, beta, p);
     end;

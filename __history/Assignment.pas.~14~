@@ -157,7 +157,7 @@ begin
 
 
     //Determine how many time steps the model has
-    time_steps := Length(X) - 1; //Determine the number of time steps by using the length of column X, which is the column with results.
+    time_steps := Length(X); //Determine the number of time steps by using the length of column X, which is the column with results.
 
 
     //If the model only has 1 time step, the solution is trivial.
@@ -165,14 +165,8 @@ begin
     setLength(ValueHere, time_steps);
     if time_steps = 1 then
     begin
-      ValueHere := EntropicRiskMeasure(X, beta, p);
+      ValueHere[0] := EntropicRiskMeasure(X, beta, p);
     end;
-
-
-
-    ShowMessage('K is not larger than zero.');
-
-
 
 end;
 
