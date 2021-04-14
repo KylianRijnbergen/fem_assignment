@@ -121,6 +121,9 @@ trivial_cases : array of TValueArrayX; //Intermediate column for which the rest 
 current_funds : double; //Current funds (budget left).
 current_beta : double; //Intermediate value we use in functions to indicate the current beta.
 cases_no_funds_spent : array of TValueArrayX;
+partial_spendings_index : integer; //index for tracking how much to spend
+nodes : integer;
+y_k_matrix : array of array of TValueArrayX;
 //OWN VARIABLES
 begin
   //Initialization, check parameters
@@ -196,6 +199,37 @@ begin
       end;
     end;
     trivial_cases[time_steps - 1] := cases_no_funds_spent[division_factor];
+
+
+
+    //COPIED CODE
+    for current_time_step := 0 to time_steps - 2 do
+      begin
+        for nodes := 0 to current_time_step do
+        begin
+          //ShowMessage('nodes)');
+          //ShowMessage(IntToStr(nodes));
+          //ShowMessage('timestep');
+          //ShowMessage(IntToStr(current_time_step));
+          BetaStar[0][current_time_step][nodes] := 0;
+        end;
+      end;
+
+
+    for current_funds_index := 2 to division_factor + 1 do
+    begin
+
+      for partial_spendings_index := 1 to current_funds_index do
+        begin
+          //y_k_matrix[partial_spendings_index][current_funds_index] := // geef als input het scenario waar je uitkomt, dan de beta die je uitgeeft, en dan p).
+
+        end;
+
+
+
+    end;
+
+
 
 
 
