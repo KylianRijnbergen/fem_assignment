@@ -1,20 +1,14 @@
 unit Assignment;
-
 interface
-
 uses Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VclTee.TeeGDIPlus, VCLTee.TeEngine,
   Vcl.ExtCtrls, VCLTee.TeeProcs, VCLTee.Chart, VCLTee.Series, Vcl.StdCtrls, math;
-
 type
   TValueArrayX = array of double;
   TBetaStar = array of array of array of double;
-
 procedure AssignmentA(p: double; X:TValueArrayX; var ResultArray: array of TValueArrayX);
 procedure AssignmentB(p, Beta: double; X:TValueArrayX; var ResultArray: array of TValueArrayX);
 procedure AssignmentC(p, beta: double; K:integer; X:TValueArrayX; var ResultArray: Array of TValueArrayX; var BetaStar: TBetaStar);
-
-
 //OWN FUNCTIONS
 function CalculateValueOfNode(val_node_1, val_node_2 : double;  probability_up : double):double;
 implementation
@@ -29,8 +23,6 @@ begin
   current_col := Length(ResultArray) - 2;
   while current_col >= 0 do
   begin
-
-
     //Calculate 1 column
     current_col_length := Length(ResultArray[current_col]);
     for index := 0 to current_col_length - 1 do
@@ -43,7 +35,6 @@ begin
     current_col := current_col - 1;
   end;
 end;
-
 function EntropicRiskMeasure(X_input:TValueArrayX; Beta, p: double):TValueArrayX; //With p the probability for an up-branch, Beta the stress unit
 var
   N, i: integer;
@@ -75,17 +66,33 @@ begin
     Result := M;
   end;
 end;
-
 // Next procedure runs when the Button "Run Assignment 2" is pressed
 // Determine the expected value of X using the Entropic Risk Measure
 // write result to ResultArray
 procedure AssignmentB(p, Beta: double; X:TValueArrayX; var ResultArray: array of TValueArrayX);
-var time : integer;
+var output_array : TValueArrayX;
+    number_of_columns, current_col, current_col_length, index : integer;
+    val1, val2 : double;
+    col_index: Integer;
+    length_index: Integer; //Values of the next nodes
 begin
-  for time := High(ResultArray) - 1 downto 0 do
+  current_col := Length(ResultArray) - 2;
+  while current_col >= 0 do
     begin
-      ResultArray[time] := EntropicRiskMeasure(ResultArray[time + 1], Beta, p);
+    //X is the input array
+    //output_array is the output array of the function, which is in column X - 1;
+    output_array := EntropicRiskMeasure(X, Beta, p);
+    //Calculate 1 column
+    current_col_length := Length(ResultArray[current_col]);
+    for index := 0 to current_col_length - 1 do
+    begin
+      ResultArray[current_col][index] := output_array[index];
     end;
+    SetLength(X, current_col + 1);
+    for length_index := 0 to current_col - 1 do
+      X[length_index] := ResultArray[current_col][length_index];
+    current_col := current_col - 1;
+  end;
 end;
 
 // This procedure runs when the Button "Run Assignment 3" is pressed
@@ -93,21 +100,11 @@ end;
 // write result to ResultArray, BetaStar
 procedure AssignmentC(p, beta: double; K:integer; X:TValueArrayX; var ResultArray: Array of TValueArrayX; var BetaStar: TBetaStar);
 var
-budget : double; //budget is beta
-spending_size : double; //Spending size;
-division_factor : int64; //Division factor
-beta_wallet : array of double; //Wallet-like object;
-current_funds_index: Integer; //Wallet for beta budget
-time_steps : Integer; //Tracks number of steps
-current_time_step : Integer; //Index for time steps;
-trivial_cases : array of TValueArrayX; //Intermediate column for which the rest of the problem is easily solved.
-current_funds : double; //Current funds (budget left).
-current_beta : double; //Intermediate value we use in functions to indicate the current beta.
-partial_spendings_index : integer; //index for tracking how much to spend
-nodes : integer;
-cases_for_k_bits, temporary_copy, cases_no_funds_spent : array of TValueArrayX;
-lowest_value, lowest_beta_star : double;
 //OWN VARIABLES
+division_factor, nodes, time_steps, current_time_step, current_funds_index, partial_spendings_index: integer;
+budget, spending_size, current_funds, current_beta, lowest_value, lowest_beta_star : double;
+beta_wallet : array of double;
+trivial_cases, cases_for_k_bits, temporary_copy, cases_no_funds_spent : array of TValueArrayX;
 begin
   //Initialization, check parameters
   //1. Check that Beta >0, K > 0, X has at least two values
@@ -119,12 +116,6 @@ begin
 
   if Length(X) < 2 then
     ShowMessage('X does not contain two or more values');
-
-
-
-
-
-
 
     //Set budget, spending size, beta_wallet
     budget := beta;

@@ -1,20 +1,14 @@
 unit Assignment;
-
 interface
-
 uses Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VclTee.TeeGDIPlus, VCLTee.TeEngine,
   Vcl.ExtCtrls, VCLTee.TeeProcs, VCLTee.Chart, VCLTee.Series, Vcl.StdCtrls, math;
-
 type
   TValueArrayX = array of double;
   TBetaStar = array of array of array of double;
-
 procedure AssignmentA(p: double; X:TValueArrayX; var ResultArray: array of TValueArrayX);
 procedure AssignmentB(p, Beta: double; X:TValueArrayX; var ResultArray: array of TValueArrayX);
 procedure AssignmentC(p, beta: double; K:integer; X:TValueArrayX; var ResultArray: Array of TValueArrayX; var BetaStar: TBetaStar);
-
-
 //OWN FUNCTIONS
 function CalculateValueOfNode(val_node_1, val_node_2 : double;  probability_up : double):double;
 implementation
@@ -22,17 +16,25 @@ implementation
 // Determine the expected value of X
 // write result to ResultArray
 procedure AssignmentA(p: double; X:TValueArrayX; var ResultArray: array of TValueArrayX);
-var time,n: integer;
+var number_of_columns, current_col, current_col_length, index : integer;
+    val1, val2 : double;
+    col_index: Integer; //Values of the next nodes
 begin
-  for time:= High(ResultArray) - 1 downto 0 do //loop backwards through time (collumns)
+  current_col := Length(ResultArray) - 2;
+  while current_col >= 0 do
   begin
-    for n:= 0 to High(ResultArray[time]) do  //through all the nodes in that time (rows)
+    //Calculate 1 column
+    current_col_length := Length(ResultArray[current_col]);
+    for index := 0 to current_col_length - 1 do
     begin
-      ResultArray[time][n] := (ResultArray[time+1][n]*p) + (ResultArray[time+1][n+1]*(1-p)); //Calculate the new nodes with probability p and nodes of t+1 and write to result array
+      val1 := ResultArray[current_col + 1][index];
+      val2 := ResultArray[current_col + 1][index + 1];
+      ResultArray[current_col][index] := CalculateValueOfNode(val1, val2, p);
     end;
+    //Proceed to next column:
+    current_col := current_col - 1;
   end;
 end;
-
 function EntropicRiskMeasure(X_input:TValueArrayX; Beta, p: double):TValueArrayX; //With p the probability for an up-branch, Beta the stress unit
 var
   N, i: integer;
@@ -64,17 +66,33 @@ begin
     Result := M;
   end;
 end;
-
 // Next procedure runs when the Button "Run Assignment 2" is pressed
 // Determine the expected value of X using the Entropic Risk Measure
 // write result to ResultArray
 procedure AssignmentB(p, Beta: double; X:TValueArrayX; var ResultArray: array of TValueArrayX);
-var time : integer;
+var output_array : TValueArrayX;
+    number_of_columns, current_col, current_col_length, index : integer;
+    val1, val2 : double;
+    col_index: Integer;
+    length_index: Integer; //Values of the next nodes
 begin
-  for time := High(ResultArray) - 1 downto 0 do
+  current_col := Length(ResultArray) - 2;
+  while current_col >= 0 do
     begin
-      ResultArray[time] := EntropicRiskMeasure(ResultArray[time + 1], Beta, p);
+    //X is the input array
+    //output_array is the output array of the function, which is in column X - 1;
+    output_array := EntropicRiskMeasure(X, Beta, p);
+    //Calculate 1 column
+    current_col_length := Length(ResultArray[current_col]);
+    for index := 0 to current_col_length - 1 do
+    begin
+      ResultArray[current_col][index] := output_array[index];
     end;
+    SetLength(X, current_col + 1);
+    for length_index := 0 to current_col - 1 do
+      X[length_index] := ResultArray[current_col][length_index];
+    current_col := current_col - 1;
+  end;
 end;
 
 // This procedure runs when the Button "Run Assignment 3" is pressed
@@ -82,21 +100,11 @@ end;
 // write result to ResultArray, BetaStar
 procedure AssignmentC(p, beta: double; K:integer; X:TValueArrayX; var ResultArray: Array of TValueArrayX; var BetaStar: TBetaStar);
 var
-budget : double; //budget is beta
-spending_size : double; //Spending size;
-division_factor : int64; //Division factor
-beta_wallet : array of double; //Wallet-like object;
-current_funds_index: Integer; //Wallet for beta budget
-time_steps : Integer; //Tracks number of steps
-current_time_step : Integer; //Index for time steps;
-trivial_cases : array of TValueArrayX; //Intermediate column for which the rest of the problem is easily solved.
-current_funds : double; //Current funds (budget left).
-current_beta : double; //Intermediate value we use in functions to indicate the current beta.
-partial_spendings_index : integer; //index for tracking how much to spend
-nodes : integer;
-cases_for_k_bits, temporary_copy, cases_no_funds_spent : array of TValueArrayX;
-lowest_value, lowest_beta_star : double;
 //OWN VARIABLES
+division_factor, nodes, time_steps, current_time_step, current_funds_index, partial_spendings_index: integer;
+budget, spending_size, current_funds, current_beta, lowest_value, lowest_beta_star : double;
+beta_wallet : array of double;
+trivial_cases, cases_for_k_bits, temporary_copy, cases_no_funds_spent : array of TValueArrayX;
 begin
   //Initialization, check parameters
   //1. Check that Beta >0, K > 0, X has at least two values
@@ -108,12 +116,6 @@ begin
 
   if Length(X) < 2 then
     ShowMessage('X does not contain two or more values');
-
-
-
-
-
-
 
     //Set budget, spending size, beta_wallet
     budget := beta;
@@ -161,14 +163,13 @@ begin
     //voor elk mogelijk budget, uitrekent wat er gebeurt als we een bedrag x uitgeven,
     //waarbij x een bedrag moet zijn wat in onze portemonnee kan zitten.
     setLength(cases_no_funds_spent, division_factor + 1);
-    for current_funds_index := 1 to division_factor + 1do
+    for current_funds_index := 1 to division_factor + 1 do
     begin
       //Compute, for all possible spendings, what the trivial cases would be.
-      current_beta := beta_wallet[current_funds_index];
-      cases_no_funds_spent[current_funds_index - 1] := EntropicRiskMeasure(X, current_beta, p);
+      cases_no_funds_spent[current_funds_index - 1] := EntropicRiskMeasure(X, beta_wallet[current_funds_index - 1], p);
       for current_time_step := 0 to time_steps - 1 do
       begin
-        BetaStar[current_funds_index][time_steps - 1][current_time_step] := current_funds_index - 1; //
+        BetaStar[current_funds_index - 1][time_steps - 1][current_time_step] := current_funds_index - 1; //
       end;
     end;
     trivial_cases[time_steps - 1] := cases_no_funds_spent[division_factor];
@@ -177,6 +178,7 @@ begin
   setLength(temporary_copy, division_factor + 1);
   for current_time_step := time_steps - 2 downto 0 do
     begin
+      temporary_copy[0] := EntropicRiskMeasure(cases_no_funds_spent[0], 0, p);
       for nodes := 0 to current_time_step do
       begin
         //ShowMessage('nodes)');
@@ -211,7 +213,6 @@ begin
                   lowest_value := cases_for_k_bits[partial_spendings_index - 1][nodes];
                   lowest_beta_star := beta_wallet[partial_spendings_index - 1];
                 end;
-
               end;
 
             setLength(temporary_copy[current_funds_index - 1], current_time_step + 1);
@@ -220,7 +221,6 @@ begin
           end;
     end;
     cases_no_funds_spent := copy(temporary_copy);
-    //ShowMessage(IntToStr(current_time_step));
     ResultArray[current_time_step] := (temporary_copy[division_factor]);
 
   end;
