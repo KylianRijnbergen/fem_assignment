@@ -123,7 +123,8 @@ current_beta : double; //Intermediate value we use in functions to indicate the 
 cases_no_funds_spent : array of TValueArrayX;
 partial_spendings_index : integer; //index for tracking how much to spend
 nodes : integer;
-y_k_matrix : array of array of TValueArrayX;
+cases_for_k_bits, temporary_copy : array of TValueArrayX;
+lowest_value, lowest_beta_star : double;
 //OWN VARIABLES
 begin
   //Initialization, check parameters
@@ -199,11 +200,12 @@ begin
       end;
     end;
     trivial_cases[time_steps - 1] := cases_no_funds_spent[division_factor];
+    ResultArray[time_steps - 1] := cases_no_funds_spent[K];
 
 
 
     //COPIED CODE
-    for current_time_step := 0 to time_steps - 2 do
+    for current_time_step := time_steps - 2 downto 0 do
       begin
         for nodes := 0 to current_time_step do
         begin
@@ -216,20 +218,47 @@ begin
       end;
 
 
-    for current_funds_index := 2 to division_factor + 1 do
+    for current_funds_index := 2 to division_factor + 1 do       //for every budget do
     begin
-
+      setLength(cases_for_k_bits, current_funds_index);
       for partial_spendings_index := 1 to current_funds_index do
-        begin
-          //y_k_matrix[partial_spendings_index][current_funds_index] := // geef als input het scenario waar je uitkomt, dan de beta die je uitgeeft, en dan p).
-
+        begin //For each spendings and budget, calculate the entropic risk measure).
+          cases_for_k_bits[partial_spendings_index - 1] := EntropicRiskMeasure(cases_no_funds_spent[current_funds_index - partial_spendings_index], beta_wallet[partial_spendings_index - 1], p);
         end;
+
+        //For all nodes, calculate:
+        for nodes := 0 to current_time_step do
+          begin
+            lowest_value := 10000;
+            lowest_beta_star := 0;
+
+            //For all spendings do:
+            for partial_spendings_index := 1 to current_funds_index do
+              begin
+              //If the new value is lower than the current minimum
+              if cases_for_k_bits[partial_spendings_index - 1][nodes] < lowest_value then
+                begin
+                  lowest_value := cases_for_k_bits[partial_spendings_index - 1][nodes];
+                  lowest_beta_star := beta_wallet[partial_spendings_index - 1];
+                end;
+
+            end;
+
+            setLength(temporary_copy[current_funds_index - 1], current_time_step + 1);
+            temporary_copy[current_funds_index - 1][nodes] := lowest_value;
+            BetaStar[current_funds_index - 1][current_time_step][nodes] := lowest_beta_star;
+
+          end;
+
+
+
 
 
 
     end;
 
-
+        //cases_no_funds_spent := copy(temporary_copy);
+        //ResultArray[current_time_step] := (temporary_copy[division_factor]);
 
 
 
