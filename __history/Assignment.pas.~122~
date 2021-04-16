@@ -163,14 +163,13 @@ begin
     //voor elk mogelijk budget, uitrekent wat er gebeurt als we een bedrag x uitgeven,
     //waarbij x een bedrag moet zijn wat in onze portemonnee kan zitten.
     setLength(cases_no_funds_spent, division_factor + 1);
-    for current_funds_index := 1 to division_factor + 1do
+    for current_funds_index := 1 to division_factor + 1 do
     begin
       //Compute, for all possible spendings, what the trivial cases would be.
-      current_beta := beta_wallet[current_funds_index];
-      cases_no_funds_spent[current_funds_index - 1] := EntropicRiskMeasure(X, current_beta, p);
+      cases_no_funds_spent[current_funds_index - 1] := EntropicRiskMeasure(X, beta_wallet[current_funds_index - 1], p);
       for current_time_step := 0 to time_steps - 1 do
       begin
-        BetaStar[current_funds_index][time_steps - 1][current_time_step] := current_funds_index - 1; //
+        BetaStar[current_funds_index - 1][time_steps - 1][current_time_step] := current_funds_index - 1; //
       end;
     end;
     trivial_cases[time_steps - 1] := cases_no_funds_spent[division_factor];
@@ -179,6 +178,7 @@ begin
   setLength(temporary_copy, division_factor + 1);
   for current_time_step := time_steps - 2 downto 0 do
     begin
+      temporary_copy[0] := EntropicRiskMeasure(cases_no_funds_spent[0], 0, p);
       for nodes := 0 to current_time_step do
       begin
         //ShowMessage('nodes)');
@@ -213,7 +213,6 @@ begin
                   lowest_value := cases_for_k_bits[partial_spendings_index - 1][nodes];
                   lowest_beta_star := beta_wallet[partial_spendings_index - 1];
                 end;
-
               end;
 
             setLength(temporary_copy[current_funds_index - 1], current_time_step + 1);
@@ -222,7 +221,6 @@ begin
           end;
     end;
     cases_no_funds_spent := copy(temporary_copy);
-    //ShowMessage(IntToStr(current_time_step));
     ResultArray[current_time_step] := (temporary_copy[division_factor]);
 
   end;
